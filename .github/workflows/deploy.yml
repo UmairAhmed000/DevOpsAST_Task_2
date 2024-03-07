@@ -13,8 +13,8 @@ jobs:
       - name: Trigger Azure DevOps pipeline
         uses: Azure/pipeline-templates/trigger-azure-pipelines@main
         with:
-          org: YourOrgName
-          project: YourProjectName
-          pipeline: 'YourPipelineName'
+          org: umshaikh
+          project: DevOps Task 2
+          pipeline: 'UmairAhmed000.DevOpsAST_Task_2'
           branch: main
           token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
