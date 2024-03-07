@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # GitHub Actions workflow steps
       - name: Checkout Repository
         uses: actions/checkout@v2
 
@@ -25,15 +24,14 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)/myapp
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: $(Build.ArtifactStagingDirectory)/myapp
+          path: ${{env.DOTNET_ROOT}}/myapp
 
-      # Azure DevOps deployment steps
       - name: Archive files
         uses: actions/setup-node@v1
         with:
@@ -41,12 +39,12 @@ jobs:
 
       - name: Publish build artifacts
         run: |
-          mkdir -p $(Build.ArtifactStagingDirectory)/publish
-          cp -r $(Build.SourcesDirectory)/* $(Build.ArtifactStagingDirectory)/publish
+          mkdir -p ${{ env.BUILD_ARTIFACTS }}/publish
+          cp -r ${{ github.workspace }}/* ${{ env.BUILD_ARTIFACTS }}/publish
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'DevOpstask2'
           slot-name: 'Production'
-          package: '$(Build.ArtifactStagingDirectory)/publish'
+          package: '${{ env.BUILD_ARTIFACTS }}/publish'
