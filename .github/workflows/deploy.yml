@@ -15,6 +15,6 @@ jobs:
         with:
           org: umshaikh
           project: DevOps Task 2
-          pipeline: 'UmairAhmed000.DevOpsAST_Task_2'
+          pipeline: 'UmairAhmed000.DevOpsAST_Task_2(3)'
           branch: main
           token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
