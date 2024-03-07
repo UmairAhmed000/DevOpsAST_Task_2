@@ -1,50 +1,53 @@
-name: Build and deploy ASP.Net Core app to Azure Web App - DevOpstask2
+trigger:
+- main
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+pool:
+  vmImage: 'ubuntu-latest'
 
 jobs:
-  build_and_deploy:
-    runs-on: ubuntu-latest
+- job: build_and_deploy
+  displayName: 'Build and deploy ASP.Net Core app to Azure Web App - DevOpstask2'
+  steps:
+  - checkout: self
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+  - task: UseDotNet@2
+    displayName: 'Setup .NET Core'
+    inputs:
+      packageType: 'sdk'
+      version: '8.x'
 
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '8.x'
-          include-prerelease: true
+  - script: |
+      dotnet build --configuration Release
+    displayName: 'Build with dotnet'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+  - script: |
+      dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)/myapp
+    displayName: 'Dotnet publish'
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload artifact for deployment job'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/myapp'
+      ArtifactName: 'dotnet-app'
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
-        with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+  - task: ArchiveFiles@2
+    displayName: 'Archive files'
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+      includeRootFolder: false
 
-      - name: Archive files
-        uses: actions/setup-node@v1
-        with:
-          version: '12.x'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
+      ArtifactName: 'publish'
 
-      - name: Publish build artifacts
-        run: |
-          mkdir -p ${{ env.BUILD_ARTIFACTS }}/publish
-          cp -r ${{ github.workspace }}/* ${{ env.BUILD_ARTIFACTS }}/publish
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'DevOpstask2'
-          slot-name: 'Production'
-          package: '${{ env.BUILD_ARTIFACTS }}/publish'
+  - task: AzureRmWebAppDeployment@4
+    displayName: 'Deploy to Azure Web App'
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: 'Azure for Students'  # Azure service connection name
+      appType: 'webApp'
+      WebAppName: 'DevOpstask2'  # Name of your Azure Web App
+      packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
+      enableCustomDeployment: true
