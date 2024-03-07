@@ -1,20 +1,21 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP.Net Core app to Azure Web App - DevOpstask2
 
-on:
-  push:
-    branches:
+trigger:
+  branches:
+    include:
       - main
-  workflow_dispatch:
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build_and_deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # GitHub Actions workflow steps
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
@@ -26,41 +27,27 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: $(Build.ArtifactStagingDirectory)/myapp
 
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
+      # Azure DevOps deployment steps
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(build.sourcesDirectory)'
+          includeRootFolder: false
 
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v3
-        with:
-          name: .net-app
-      
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FB51D63939BD4F13A0BD382825EF8B97 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F7C87A74DC104A79BEF3B511906D94DA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_47CA865CC52144148B45E7CC956E3FBE }}
+      - task: PublishBuildArtifacts@1
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'DevOpstask2'
           slot-name: 'Production'
-          package: .
-          
+          package: '$(Build.ArtifactStagingDirectory)/myapp'
+
+      # Optionally, you can add cleanup steps if necessary
