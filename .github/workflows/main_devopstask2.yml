@@ -46,7 +46,7 @@ jobs:
     displayName: 'Deploy to Azure Web App'
     inputs:
       ConnectionType: 'AzureRM'
-      azureSubscription: 'c870b16a-0d82-4c1d-a664-f8c74ca20960'  # Azure service connection name
+      azureSubscription: 'Azure for Students'  # Azure service connection name
       appType: 'webApp'
       WebAppName: 'DevOpstask2'  # Name of your Azure Web App
       packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
