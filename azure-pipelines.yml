@@ -1,0 +1,44 @@
+# HTML
+# Archive your static HTML project and save it with the build record.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(build.sourcesDirectory)'
+    includeRootFolder: false
+- task: PublishBuildArtifacts@1
+
+# GitHub Actions workflow script
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Archive HTML files
+      run: |
+        mkdir -p artifacts
+        cp -r * artifacts/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: html-files
+        path: artifacts/
