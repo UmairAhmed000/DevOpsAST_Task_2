@@ -1,12 +1,10 @@
 name: Build and deploy ASP.Net Core app to Azure Web App - DevOpstask2
 
-trigger:
-  branches:
-    include:
+on:
+  push:
+    branches:
       - main
-
-pool:
-  vmImage: 'ubuntu-latest'
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -36,18 +34,19 @@ jobs:
           path: $(Build.ArtifactStagingDirectory)/myapp
 
       # Azure DevOps deployment steps
-      - task: ArchiveFiles@2
-        inputs:
-          rootFolderOrFile: '$(build.sourcesDirectory)'
-          includeRootFolder: false
+      - name: Archive files
+        uses: actions/setup-node@v1
+        with:
+          version: '12.x'
 
-      - task: PublishBuildArtifacts@1
+      - name: Publish build artifacts
+        run: |
+          mkdir -p $(Build.ArtifactStagingDirectory)/publish
+          cp -r $(Build.SourcesDirectory)/* $(Build.ArtifactStagingDirectory)/publish
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'DevOpstask2'
           slot-name: 'Production'
-          package: '$(Build.ArtifactStagingDirectory)/myapp'
-
-      # Optionally, you can add cleanup steps if necessary
+          package: '$(Build.ArtifactStagingDirectory)/publish'
