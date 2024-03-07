@@ -16,29 +16,16 @@ steps:
     includeRootFolder: false
 - task: PublishBuildArtifacts@1
 
-# GitHub Actions workflow script
-name: Build and Deploy
+# Azure Pipelines YAML
+trigger:
+- main
 
-on:
-  push:
-    branches:
-      - main
+pool:
+  vmImage: 'ubuntu-latest'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    
-    - name: Archive HTML files
-      run: |
-        mkdir -p artifacts
-        cp -r * artifacts/
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: html-files
-        path: artifacts/
+steps:
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+- task: PublishBuildArtifacts@1
